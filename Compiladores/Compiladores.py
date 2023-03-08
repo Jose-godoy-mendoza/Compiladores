@@ -51,7 +51,7 @@ for widget in LowerLabelFrame.winfo_children():
 # ------------------- Lower desing has been finished ------------------- #
 
 
-
+# ------------------- Creating methods to manage files ------------------- #
 def OpenFile():
     filetypes = (
         ('text files', '*.txt'),
@@ -64,17 +64,40 @@ def OpenFile():
     return File.name
 
 def SaveFile():
-    #FileName="test"
-    #path = Path(FileName)
-    #print(FileName)
-    #https://python-forum.io/thread-20063.html
-
     f = fd.asksaveasfile(mode='w', defaultextension=".txt")
-    if f is None: # asksaveasfile return `None` if dialog closed with "cancel".
+    if f is None: 
         return
     f.write(LeftTextbox.get(1.0, 'end-1c'))
     f.close() 
-    
+# ------------------- End of file management ------------------- #
+
+# ------------------- Compile Function ------------------- #
+def Compile():
+    Tokens =""
+    LeftText = LeftTextbox.get(1.0, 'end-1c')
+    Text = LeftText.split("\n")
+    #RightTextbox.delete()
+    RightTextbox.insert("end-1c", len(Text))
+    Guardar = []
+    for Lines in Text:
+        position = 0
+        Delimiter = len(Lines)-1
+        while position <= Delimiter:
+            Iteration = Lines[position]
+            if Iteration == " " or Iteration == "\t" or position==Delimiter:
+                Tokens = Tokens + Iteration
+                if len(Tokens) >= 1: 
+                    Guardar.append(Tokens)  
+                    Tokens = ""
+            else:
+                Tokens = Tokens + Iteration
+            position = position + 1
+        print(Guardar)
+    print("----------------------")
+    for a in Guardar:
+        print(a)        
+
+# ------------------- End of Compile Function ------------------- #
 
 def Menu():
     DropdownMenu = tk.Menu(VentanaPrincipal)
@@ -82,7 +105,7 @@ def Menu():
     Opciones = tk.Menu(DropdownMenu)
     Opciones.add_command(label="Abrir Fichero", command=OpenFile)
     Opciones.add_command(label="Guardar", command=SaveFile)
-    Opciones.add_command(label="Compilar Fichero")
+    Opciones.add_command(label="Compilar Fichero", command=Compile)
     Opciones.add_command(label="Tabla de tokens")
     Opciones.add_separator()
     Opciones.add_command(label="Salir")
@@ -95,10 +118,9 @@ VentanaPrincipal.mainloop()
 # ------------------- Lets obtain the text from the left TextBox ------------------- #
 def GetLeftText():
     LeftText = LeftTextbox.get(1.0, 'end-1c')
-    Tokens = LeftText.split()
+    Text = LeftText.split("\n")
     #RightLabel.config(text=LeftText)
-    RightTextbox.insert("end-1c", len(Tokens))
-    return LeftText
+    RightTextbox.insert("end-1c", len(Text))
     
 # ------------------- Lets set the text from the rifht TextBox ------------------- #
 def SetRightText():
