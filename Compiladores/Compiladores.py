@@ -66,7 +66,7 @@ def OpenFile():
     return File.name
 
 def SaveFile():
-    f = fd.askMatrixasfile(mode='w', defaultextension=".txt")
+    f = fd.asksaveasfile(mode='w', defaultextension=".txt")
     if f is None: 
         return
     f.write(LeftTextbox.get(1.0, 'end-1c'))
@@ -75,39 +75,35 @@ def SaveFile():
 
 # ------------------- Compile Function ------------------- #
 
-def Clasify_tokens(Matrix):
+def Clasify_tokens(Token):
     #print(len(Matrix))
-    print("1--------------------------------------1")
-    Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","{","}"])
+    Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","{","}","!"])
     Reserved_Words = (["if","else","else if","for","while","switch","private","return","void","int","string","double","float"])
-    Columns = 0
-    for Lines in Matrix:
-        Rows = 0
-        for Row in Lines:
-            #If print Lines it prints the whole line as much as values in that line
-            #print(Row) 
-            if Row in Operators:
-                Matrix[Columns][Rows] = "OP( "+Row+" )"
-                #print(Matrix[Columns][Rows])    #POSITION OF THE VALUE TO BE REPLACED
-                #print("Columna: ",  Columns,  "  Fila: ",  Rows)
-            elif Row in Reserved_Words:
-                Matrix[Columns][Rows] = "PR( "+Row+" )"
-            elif Row.isdigit():
-                Matrix[Columns][Rows] = "NUM( "+Row+" )"
-            elif Row !="":
-                Matrix[Columns][Rows] = "ID( "+Row+" )"
-            Rows = Rows + 1
-        RightTextbox.insert('end-1c', ",".join(Matrix[Columns]))
-        RightTextbox.insert('end-1c', "\n")
-        Columns = Columns + 1
-    return Matrix
-    #print(Matrix)
+    
+    if Token in Reserved_Words:
+        Token = "PR( "+Token+" )"
+        return Token
+    elif Token in Operators:
+        Token = "OP( "+Token+" )"
+        return Token
+    #with the following validation I can check if it has a . so I can store float or double variables
+    elif Token.isnumeric() or (Token == '-' and Token[1:].isnumeric()) or (Token.count('.') == 1 and all(c.isdigit() for c in Token.replace('.', '', 1))):
+        Token = "NUM( "+Token+" )"
+        return Token
+    elif Token !="":
+        Token = "ID( "+Token+" )"
+        return Token
+    #RightTextbox.insert('end-1c', ",".join(Token))
+    #RightTextbox.insert('end-1c', "\n")
+
 
 def Compile():
     Tokens =""
     Columns = 0
     Matrix = [[]]
-    Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||"])
+    #if I want to split a variable that is joined with a , or . or whichever symbol I want to split I just add that symbol on the next array
+    Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","!"])
+    OperatorConcat=(["<",">","!"])
     LeftText = LeftTextbox.get(1.0, 'end-1c')
     Text = LeftText.split("\n")
     for Lines in Text:
@@ -116,34 +112,41 @@ def Compile():
         Delimiter = len(Lines)-1
         while position <= Delimiter:
             Iteration = Lines[position]
+            #Validating there´s no () in the line in order to split them into tokens
             if (Iteration == " " or Iteration == "\t" or position==Delimiter) and (Iteration !="(" and Iteration !=")"):
                 if Iteration !=" " and Iteration !="\t":
                     Tokens = Tokens + Iteration
+                    #if there´s something stored in Tokens then concat the current value in in iteration
                 if len(Tokens) >= 1: 
-                    Matrix[Columns].append(Tokens) 
+                    
+                    Matrix[Columns].append(Clasify_tokens(Tokens)) 
                     Row = Row +1 
                     Tokens = ""
+                    #Validating that there´s match with the current iteration with Operators in order to split the operators if they are joined with othe variable
             elif Iteration in Operators:
                     if(Tokens!=""):
-                        Matrix[Columns].append(Tokens)
+                        Matrix[Columns].append(Clasify_tokens(Tokens)) 
                         Row = Row +1 
                         Tokens = ""
-                    temp = Lines[position-1]
-                    print("*****************")
-                    if temp == Iteration:
-                        Matrix[Columns][Row]= Iteration + Iteration
+                    tempBack = Lines[position-1]
+                    #tempFront = Lines[position+1]
+                    #Checking if the previous token is equal to =, <, > or ! to join the current token to the previous one
+                    if tempBack == Iteration or tempBack in OperatorConcat:
                         Row = Row +1 
+                        temp = tempBack + Iteration
+                        Matrix[Columns][Row]= Clasify_tokens(temp)
+                        
                     else:
-                        Matrix[Columns].append(Iteration)
+                        Matrix[Columns].append(Clasify_tokens(Iteration)) 
             else:
                 Tokens = Tokens + Iteration
+            
             position = position + 1
         Matrix.append([])
-        #print(Matrix)
-        #RightTextbox.insert('end-1c', ",".join(Matrix[Columns]))
-        #RightTextbox.insert('end-1c', "\n")
+        RightTextbox.insert('end-1c',", ".join(Matrix[Columns]))
         Columns = Columns + 1
-    Matrix = Clasify_tokens(Matrix)
+        RightTextbox.insert('end-1c', "\n")
+    #Matrix = Clasify_tokens(Matrix)
     print(Matrix)
     
 
