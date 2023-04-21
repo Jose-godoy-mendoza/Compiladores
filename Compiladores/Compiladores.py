@@ -73,12 +73,70 @@ def SaveFile():
     f.close() 
 # ------------------- End of file management ------------------- #
 
+# ------------------- Symbols Table ------------------- #
+def filter_tokens(variable):
+    return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace(")","").replace(' ', '')
+
+
+def SymbolsTable(Matrix):
+    floating_window = tk.Toplevel(VentanaPrincipal)
+    floating_window.geometry("800x400+100+200")  # Width x Height + X + Y
+    floating_window.wm_attributes("-topmost", True)
+
+    tree = tk.ttk.Treeview(floating_window, columns=("Type", "Name", "Value", "Line", "Token #"))
+    tree.heading("Type", text="Type")
+    tree.heading("Name", text="Name")
+    tree.heading("Value", text="Value")
+    tree.heading("Line", text="Line")
+    tree.heading("Token #", text="Column")
+    i = 0
+    Filter = [[]]
+    Match = []
+    for Row_index, Row in enumerate(Matrix):
+
+        #Reading the Columns
+        for Columns_index, Columns in enumerate(Row):
+            
+            #print(Matrix[Row_index][Columns_index])
+            if "ID" in Columns:
+                #print("Coincidencia: ", Columns, " En la Linea: ", Row_index, " Token #",Columns_index)
+                if "PR" in Matrix[Row_index][Columns_index-1]:
+                    #Type = Matrix[Row_index][Columns_index-1].replace("PR(", "").replace(")","").replace(' ', '')
+                    Type = filter_tokens(Matrix[Row_index][Columns_index-1])
+                    #ID = Columns.replace("ID(", "").replace(")","").replace(' ','')
+                    ID = filter_tokens(Columns)
+                    #Value = Matrix[Row_index][Columns_index+2].replace("NUM(","").replace(")","").replace(' ','')
+                    if Type == "void":
+                        Value = "FUNCTION"
+                    else:
+                        Value = filter_tokens(Matrix[Row_index][Columns_index+2])
+                    if ID in Match:
+                        #print("saber")
+                        del Matrix[Row_index][Columns_index]
+                    else: 
+                        tree.insert("", "end", text=i, values=(Type, ID, Value, Row_index+1, Columns_index+1))
+                        #Filter[i].append(Type)
+                        #Filter[i].append(ID)
+                        #Filter[i].append(Value)
+                        #Filter.append([])
+                        Match.append(ID)
+                        i = i+1
+    tree.pack()
+
+    print(Filter)
+    #I could use a function to search if the token has been used before and stored in Filter Matrix, in order to substract the positions where the token is being used
+    print("Variables encontradas: ", Match)
+
+    
+    #tree.pack()
+# ------------------- End Of Symbols Table ------------------- #
+
 # ------------------- Compile Function ------------------- #
 
 def Clasify_tokens(Token):
     #print(len(Matrix))
     Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","{","}","!"])
-    Reserved_Words = (["if","else","else if","for","while","switch","private","return","void","int","string","double","float"])
+    Reserved_Words = (["if","else","else if","for","while","switch","private","return","void","int","string","double","float", ";"])
     
     if Token in Reserved_Words:
         Token = "PR( "+Token+" )"
@@ -102,7 +160,7 @@ def Compile():
     Columns = 0
     Matrix = [[]]
     #if I want to split a variable that is joined with a , or . or whichever symbol I want to split I just add that symbol on the next array
-    Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","!"])
+    Operators = (["(", ")", "=", "+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||", "!", ";"])
     OperatorConcat=(["<",">","!"])
     LeftText = LeftTextbox.get(1.0, 'end-1c')
     Text = LeftText.split("\n")
@@ -114,7 +172,7 @@ def Compile():
             Iteration = Lines[position]
             #Validating there´s no () in the line in order to split them into tokens
             if (Iteration == " " or Iteration == "\t" or position==Delimiter) and (Iteration !="(" and Iteration !=")"):
-                if Iteration !=" " and Iteration !="\t":
+                if Iteration !=" " and Iteration !="\t" and Iteration !=";":
                     Tokens = Tokens + Iteration
                     #if there´s something stored in Tokens then concat the current value in in iteration
                 if len(Tokens) >= 1: 
@@ -122,6 +180,8 @@ def Compile():
                     Matrix[Columns].append(Clasify_tokens(Tokens)) 
                     Row = Row +1 
                     Tokens = ""
+                if Iteration == ";":
+                    Matrix[Columns].append(Clasify_tokens(Iteration))
                     #Validating that there´s match with the current iteration with Operators in order to split the operators if they are joined with othe variable
             elif Iteration in Operators:
                     if(Tokens!=""):
@@ -129,8 +189,7 @@ def Compile():
                         Row = Row +1 
                         Tokens = ""
                     tempBack = Lines[position-1]
-                    #tempFront = Lines[position+1]
-                    #Checking if the previous token is equal to =, <, > or ! to join the current token to the previous one
+                    #Checking if the previous token stored in the Matrix is equal to =, <, > or ! to join the current token to the previous one
                     if tempBack == Iteration or tempBack in OperatorConcat:
                         Row = Row +1 
                         temp = tempBack + Iteration
@@ -148,12 +207,11 @@ def Compile():
         RightTextbox.insert('end-1c', "\n")
     #Matrix = Clasify_tokens(Matrix)
     print(Matrix)
-    
+    SymbolsTable(Matrix)
 
 
 
 
-     
 
 # ------------------- End of Compile Function ------------------- #
 
@@ -164,7 +222,7 @@ def Menu():
     Opciones.add_command(label="Abrir Fichero", command=OpenFile)
     Opciones.add_command(label="Guardar Archivo", command=SaveFile)
     Opciones.add_command(label="Compilar Fichero", command=Compile)
-    Opciones.add_command(label="Tabla de tokens")
+    Opciones.add_command(label="Tabla de Simbolos", command=SymbolsTable)
     Opciones.add_separator()
     Opciones.add_command(label="Salir")
     DropdownMenu.add_cascade(label="Opciones", menu=Opciones)
