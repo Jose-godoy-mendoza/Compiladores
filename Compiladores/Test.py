@@ -37,41 +37,61 @@ def Tabla_Simbolos(Matrix):
     tree.heading("Line", text="Line")
     tree.heading("Token #", text="Column")
     i = 0
-    Filter = [[]]
+    temp = []
     Match = []
 
     #Reading the Rows
     for Row_index, Row in enumerate(Matrix):
-
+        
         #Reading the Columns
         for Columns_index, Columns in enumerate(Row):
-            
+            temp.append(Columns)
             #print(Matrix[Row_index][Columns_index])
-            if "ID" in Columns:
-                #print("Coincidencia: ", Columns, " En la Linea: ", Row_index, " Token #",Columns_index)
-                if "PR" in Matrix[Row_index][Columns_index-1]:
-                    #Type = Matrix[Row_index][Columns_index-1].replace("PR(", "").replace(")","").replace(' ', '')
-                    Type = filter_tokens(Matrix[Row_index][Columns_index-1])
-                    #ID = Columns.replace("ID(", "").replace(")","").replace(' ','')
-                    ID = filter_tokens(Columns)
-                    #Value = Matrix[Row_index][Columns_index+2].replace("NUM(","").replace(")","").replace(' ','')
-                    Value = filter_tokens(Matrix[Row_index][Columns_index+2])
+        if len(temp)==5:
+                print("********************************")
+                print(temp)
+                if "ID" in temp[1] and "NUM" or "ID" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
+                    #Validate that the type of the variable is the correct for its value
+                    if ("int" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and "ID" in temp[3]):
+                        print("CONFIRMANDO: ", temp[0]," .. ", temp[3]) 
+                        Type = filter_tokens(temp[0])
+                        ID = filter_tokens(temp[1])
+                        Value = filter_tokens(temp[3])
+                    #Here I validate if the variable is not the type it was declared
+                    else:
+                        ID = ""
+                        Type = ""
+                        Value = ""
+                    #Here I validate if the variable hasn´t been declared, if so It won´t appear again in the table
                     if ID in Match:
-                        #print("saber")
+                        print("VARIABLE YA DECLARADA")
                         del Matrix[Row_index][Columns_index]
+                        #score + 1
+                    #If the value doesn´t match with the type here we show the error
+                    elif len(ID) == 0 and len(Type) == 0 and len(Value)==0:
+                        print("Mala declaracion de variable en la linea: ", Row_index+1)
+                    #If the variable hasn´t been declared and its value matches its type we are going to show it
                     else: 
                         tree.insert("", "end", text=i, values=(Type, ID, Value, Row_index+1, Columns_index+1))
-                        #Filter[i].append(Type)
-                        #Filter[i].append(ID)
-                        #Filter[i].append(Value)
-                        #Filter.append([])
                         Match.append(ID)
+                        #temp = []
                         i = i+1
-    tree.pack()
+                    #temp = []
+                else:
+                    print("ERROR DE DECLARACION EN: ",Row_index+1, Columns_index+1)
+                    if "PR" in  temp[0] and "ID" in temp[1] and "NUM" or "ID" in temp[2]:
+                        print("ERROR DE ASIGNACION, FALTA EL SIMBOLO =")
+                    if ";" != temp[4]:
+                        print("FALTA EL ; al final")
+                    #temp = []
+        if len(temp) != 5:
+            print(temp)
+            print("ERROR DE DECLARACION EN LA LINEA: ", Row_index+1)
+        temp = []
+            
 
+    tree.pack()
     root.mainloop()
-    print(Filter)
-    #I could use a function to search if the token has been used before and stored in Filter Matrix, in order to substract the positions where the token is being used
     print("Variables encontradas: ", Match)
         
 
@@ -80,7 +100,7 @@ rows = 0
 Columns = 0
 Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","!", ";"])
 OperatorConcat=(["<",">","!"])
-Texto = "int Linea = 0;\n string text = hi; \n int Linea = 3; \n string bool = True;"
+Texto = "int Linea = hola;\n string text = hi; \n int Linea = 3; \n string bool = True;"
 Text = Texto.splitlines()
 Matrix = [[]]
 Comparison = [[]]
@@ -124,9 +144,6 @@ for Lines in Text:
         #print(Matrix[Columns])
         Columns = Columns + 1
 Tabla_Simbolos(Matrix)
-print("------------------------------------")
-print(Matrix)
-#Tabla_Simbolos(Matrix)
 
 
 

@@ -90,45 +90,71 @@ def SymbolsTable(Matrix):
     tree.heading("Line", text="Line")
     tree.heading("Token #", text="Column")
     i = 0
-    Filter = [[]]
+    temp = []
     Match = []
+    del Matrix[-1]
+    #Reading the Rows
     for Row_index, Row in enumerate(Matrix):
-
+        
         #Reading the Columns
+        
         for Columns_index, Columns in enumerate(Row):
-            
+            temp.append(Columns)
             #print(Matrix[Row_index][Columns_index])
-            if "ID" in Columns:
-                #print("Coincidencia: ", Columns, " En la Linea: ", Row_index, " Token #",Columns_index)
-                if "PR" in Matrix[Row_index][Columns_index-1]:
-                    #Type = Matrix[Row_index][Columns_index-1].replace("PR(", "").replace(")","").replace(' ', '')
-                    Type = filter_tokens(Matrix[Row_index][Columns_index-1])
-                    #ID = Columns.replace("ID(", "").replace(")","").replace(' ','')
-                    ID = filter_tokens(Columns)
-                    #Value = Matrix[Row_index][Columns_index+2].replace("NUM(","").replace(")","").replace(' ','')
-                    if Type == "void":
-                        Value = "FUNCTION"
+        print("********************************")
+        print(temp)
+        if len(temp)==5:
+                
+                if "ID" in temp[1] and "NUM" or "ID" or "double" or "float" or "boolean" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
+                    #Validate that the type of the variable is the correct for its value
+                    if ("int" in temp[0] and "NUM" in temp[3]) or ("double" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and "ID" in temp[3]):
+                        #print("CONFIRMANDO: ", temp[0]," .. ", temp[3]) 
+                        Type = filter_tokens(temp[0])
+                        ID = filter_tokens(temp[1])
+                        Value = filter_tokens(temp[3])
+                    #Here I validate if the variable is not the type it was declared
                     else:
-                        Value = filter_tokens(Matrix[Row_index][Columns_index+2])
+                        ID = ""
+                        Type = ""
+                        Value = ""
+                    #Here I validate if the variable hasn´t been declared, if so It won´t appear again in the table
                     if ID in Match:
-                        #print("saber")
+                        print("VARIABLE YA DECLARADA")
                         del Matrix[Row_index][Columns_index]
+                        #score + 1
+                    #If the value doesn´t match with the type here we show the error
+                    elif len(ID) == 0 and len(Type) == 0 and len(Value)==0:
+                        LowerTextbox.insert('end-1c', "Mala declaracion del tipo de valor a la variable en la linea: ", Row_index+1)
+                        LowerTextbox.insert('end-1c', "\n")
+                        print("Mala declaracion de variable en la linea: ", Row_index+1)
+                    #If the variable hasn´t been declared and its value matches its type we are going to show it
                     else: 
                         tree.insert("", "end", text=i, values=(Type, ID, Value, Row_index+1, Columns_index+1))
-                        #Filter[i].append(Type)
-                        #Filter[i].append(ID)
-                        #Filter[i].append(Value)
-                        #Filter.append([])
                         Match.append(ID)
+                        #temp = []
                         i = i+1
-    tree.pack()
+                    #temp = []
+                else:
+                    print("ERROR DE DECLARACION EN: ",Row_index+1, Columns_index+1)
+                    if "PR" in  temp[0] and "ID" in temp[1] and "NUM" or "ID" in temp[2]:
+                        print("ERROR DE ASIGNACION, FALTA EL SIMBOLO =")
+                    if ";" != temp[4]:
+                        print("FALTA EL ; al final")
+                    #temp = []
+        elif "PR" in temp[0] and len(temp)>1:
+            if "ID" in temp[1] and len(temp)>2: 
+                if "OP" in temp[2] and len(temp) != 5:
+                    print("ERROR ERROR: ", temp)
+                    LowerTextbox.insert('end-1c', "ERROR DE DECLARACION EN LA LINEA: ", Row_index+1)
+                    LowerTextbox.insert('end-1c', "\n")
+            
+        temp = []
+            
 
-    print(Filter)
-    #I could use a function to search if the token has been used before and stored in Filter Matrix, in order to substract the positions where the token is being used
+    tree.pack()
     print("Variables encontradas: ", Match)
 
     
-    #tree.pack()
 # ------------------- End Of Symbols Table ------------------- #
 
 # ------------------- Compile Function ------------------- #
@@ -136,7 +162,7 @@ def SymbolsTable(Matrix):
 def Clasify_tokens(Token):
     #print(len(Matrix))
     Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","{","}","!"])
-    Reserved_Words = (["if","else","else if","for","while","switch","private","return","void","int","string","double","float", ";"])
+    Reserved_Words = (["if","else","else if","for","while","switch","private","return","void","int","string","double","float", "boolean" ,";"])
     
     if Token in Reserved_Words:
         Token = "PR( "+Token+" )"
@@ -156,6 +182,8 @@ def Clasify_tokens(Token):
 
 
 def Compile():
+    RightTextbox.delete("1.0", tk.END)
+    LowerTextbox.delete("1.0", tk.END)
     Tokens =""
     Columns = 0
     Matrix = [[]]
@@ -206,7 +234,7 @@ def Compile():
         Columns = Columns + 1
         RightTextbox.insert('end-1c', "\n")
     #Matrix = Clasify_tokens(Matrix)
-    print(Matrix)
+    
     SymbolsTable(Matrix)
 
 
