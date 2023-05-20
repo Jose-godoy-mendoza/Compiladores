@@ -73,10 +73,65 @@ def SaveFile():
     f.close() 
 # ------------------- End of file management ------------------- #
 
-# ------------------- Symbols Table ------------------- #
+# ------------------- ERROR HANDLING ----------------- #
 def filter_tokens(variable):
-    return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace(")","").replace(' ', '')
+    return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace("OP(","").replace(")","").replace(' ', '')
 
+def ErrorMSG_NotDeclared(LineCount):
+    Message = "VARIABLE AUN NO DECLARADA, ERROR EN LA LINEA: ", LineCount
+    LowerTextbox.insert('end-1c', Message)
+    LowerTextbox.insert('end-1c', "\n")
+
+
+
+def ErrorHandling(Line, Match, LineCount):
+    print("--------------------------------ERROR HANDLING--------------------------------")
+    Operators = ["OP( = )", "OP( != )", "OP( == )", "OP( < )", "OP( <= )", "OP( > )", "OP( >= )", "OP( / )", "OP( \ )","OP( + )", "OP( - )", "OP( * )"]
+    IgnoreSymbols = ["{", "}","(",")"]
+    InvalidSymbols = ["$", "@"]
+    Count = 0
+    Position = len(Line)-1
+    
+    if "PR( if )" in Line:
+        #if(x!=0)
+        #position = len(Line)-1
+        print("1: ", Line[1], "2: ", Line[2], " 3: ", Line[3], " ", Line[Position])
+        #if Line[Position] == ";":
+            #Count = 1
+        if "OP( ( )" in Line[1] and "ID" in Line[2] and Line[3] in Operators and ("OP( ) )" in Line[Position] or "OP( ) )" in Line[Position-1]):
+            Line[2] = filter_tokens(Line[2])
+            print(Line[2])
+            if Line[2] in Match:
+                print("Asignacion correcta")
+            else:
+                ErrorMSG_NotDeclared(LineCount)
+        else:
+            Message = "IF MAL DECLARADO EN LA LINEA: ", LineCount
+            LowerTextbox.insert('end-1c', Message)
+            LowerTextbox.insert('end-1c', "\n")
+    elif "PR( for )" in Line:
+        if "OP( ( )" in Line[1] and (("int" in Line[2] and "ID" in Line[3] and "OP" in Line[4] and "NUM" in Line[5] and ";" in Line[6] and "ID" in Line[7] and "OP" in Line[8] and "NUM" in Line[9] and ";" in Line[10] and "ID" in Line[11] and "OP" in Line[12]) or "ID" in Line[2] in Line[3] and ";" in Line[4] and "ID" in Line[5] and "OP" in Line[6]):
+            if "ID" in Line[3]:
+                Line[3] = filter_tokens(Line[3])
+            else:
+                Line[2] = filter_tokens(Line[2])
+            if Line[2] in Match or Line[3] in Match:
+                print("Asignacion Correcta")
+            breakpoint
+    elif "ID" in Line[0] and "=" in Line[1] and (("ID" or "NUM "in Line[2] and "OP" in Line[3] and "ID" or "NUM" in Line[4])):
+        Line[0] = filter_tokens(Line[0])
+        if Line[0] in Match:
+            breakpoint
+        ##############################
+    elif Line[Position] not in IgnoreSymbols:
+        breakpoint
+    else:
+        Message = "Falta el ; al final de la linea", LineCount
+        LowerTextbox.insert('end-1c', Message)
+        LowerTextbox.insert('end-1c', "\n")
+
+
+# ------------------- Symbols Table ------------------- #
 
 def SymbolsTable(Matrix):
     floating_window = tk.Toplevel(VentanaPrincipal)
@@ -89,20 +144,23 @@ def SymbolsTable(Matrix):
     tree.heading("Value", text="Value")
     tree.heading("Line", text="Line")
     tree.heading("Token #", text="Column")
-    i = 0
+    i = 0 
+    linea = 0
     temp = []
     Match = []
     del Matrix[-1]
     #Reading the Rows
     for Row_index, Row in enumerate(Matrix):
-        
+        linea = linea +1
         #Reading the Columns
         
         for Columns_index, Columns in enumerate(Row):
             temp.append(Columns)
             #print(Matrix[Row_index][Columns_index])
-        print("********************************")
-        print(temp)
+        #print("********************************")
+        #print(temp)
+
+        
         if len(temp)==5:
                 
                 if "ID" in temp[1] and "NUM" or "ID" or "double" or "float" or "boolean" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
@@ -113,18 +171,28 @@ def SymbolsTable(Matrix):
                         ID = filter_tokens(temp[1])
                         Value = filter_tokens(temp[3])
                     #Here I validate if the variable is not the type it was declared
+                    elif "PR( if )" in temp[0]:
+
+                        ID = "ERROR"
+                        Type = ""
+                        Value = ""
+                    #elif "" VALIDATE IF THERE´S A SYMBOL BEDORE THE ID TO SHOW THE ERROR
                     else:
                         ID = ""
                         Type = ""
                         Value = ""
                     #Here I validate if the variable hasn´t been declared, if so It won´t appear again in the table
                     if ID in Match:
+                        Message = "Variable ya declarada anteriormente, error linea: ", Row_index+1
+                        LowerTextbox.insert('end-1c', Message)
+                        LowerTextbox.insert('end-1c', "\n")
                         print("VARIABLE YA DECLARADA")
                         del Matrix[Row_index][Columns_index]
                         #score + 1
                     #If the value doesn´t match with the type here we show the error
                     elif len(ID) == 0 and len(Type) == 0 and len(Value)==0:
-                        LowerTextbox.insert('end-1c', "Mala declaracion del tipo de valor a la variable en la linea: ", Row_index+1)
+                        Message = "Mala asignacion al tipo de variable en la linea:", Row_index+1
+                        LowerTextbox.insert('end-1c', Message)
                         LowerTextbox.insert('end-1c', "\n")
                         print("Mala declaracion de variable en la linea: ", Row_index+1)
                     #If the variable hasn´t been declared and its value matches its type we are going to show it
@@ -144,12 +212,12 @@ def SymbolsTable(Matrix):
         elif "PR" in temp[0] and len(temp)>1:
             if "ID" in temp[1] and len(temp)>2: 
                 if "OP" in temp[2] and len(temp) != 5:
-                    print("ERROR ERROR: ", temp)
-                    LowerTextbox.insert('end-1c', "ERROR DE DECLARACION EN LA LINEA: ", Row_index+1)
+                    Message = "Error de Declaracion en la linea: ", Row_index+1
+                    LowerTextbox.insert('end-1c', Message)
                     LowerTextbox.insert('end-1c', "\n")
-            
+        ErrorHandling(temp, Match,  Row_index+1)
         temp = []
-            
+
 
     tree.pack()
     print("Variables encontradas: ", Match)

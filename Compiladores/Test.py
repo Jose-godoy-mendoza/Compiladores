@@ -48,12 +48,11 @@ def Tabla_Simbolos(Matrix):
             temp.append(Columns)
             #print(Matrix[Row_index][Columns_index])
         if len(temp)==5:
-                print("********************************")
-                print(temp)
-                if "ID" in temp[1] and "NUM" or "ID" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
+                
+                if "ID" in temp[1] and "NUM" or "ID" or "double" or "float" or "boolean" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
                     #Validate that the type of the variable is the correct for its value
-                    if ("int" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and "ID" in temp[3]):
-                        print("CONFIRMANDO: ", temp[0]," .. ", temp[3]) 
+                    if ("int" in temp[0] and "NUM" in temp[3]) or ("double" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and "ID" in temp[3]):
+                        #print("CONFIRMANDO: ", temp[0]," .. ", temp[3]) 
                         Type = filter_tokens(temp[0])
                         ID = filter_tokens(temp[1])
                         Value = filter_tokens(temp[3])
@@ -69,6 +68,8 @@ def Tabla_Simbolos(Matrix):
                         #score + 1
                     #If the value doesn´t match with the type here we show the error
                     elif len(ID) == 0 and len(Type) == 0 and len(Value)==0:
+                        Message = "Mala asignacion al tipo de variable en la linea:", Row_index+1
+
                         print("Mala declaracion de variable en la linea: ", Row_index+1)
                     #If the variable hasn´t been declared and its value matches its type we are going to show it
                     else: 
@@ -84,9 +85,13 @@ def Tabla_Simbolos(Matrix):
                     if ";" != temp[4]:
                         print("FALTA EL ; al final")
                     #temp = []
-        if len(temp) != 5:
-            print(temp)
-            print("ERROR DE DECLARACION EN LA LINEA: ", Row_index+1)
+        elif len(temp)>1:
+            if "PR" in temp[0]:
+                if "ID" in temp[1] and len(temp)>2: 
+                    if "OP" in temp[2] and len(temp) != 5:
+                        print("ERROR ERROR: ", temp)
+
+        
         temp = []
             
 
