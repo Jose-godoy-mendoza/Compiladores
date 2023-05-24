@@ -269,6 +269,7 @@ def Compile():
     LowerTextbox.delete("1.0", tk.END)
     Tokens =""
     Columns = 0
+    Validate_string = 0
     Matrix = [[]]
     #if I want to split a variable that is joined with a , or . or whichever symbol I want to split I just add that symbol on the next array
     Operators = (["(", ")", "=", "+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||", "!", ";"])
@@ -276,21 +277,29 @@ def Compile():
     LeftText = LeftTextbox.get(1.0, 'end-1c')
     Text = LeftText.split("\n")
     for Lines in Text:
+        Validate_string = 0
         position = 0
         Row = 0
         Delimiter = len(Lines)-1
         while position <= Delimiter:
             Iteration = Lines[position]
+            if Iteration == '"' and Validate_string == 1:
+                Validate_string = 0
+            elif Iteration == '"':
+                print("PRUEBA")
+                Validate_string = 1    
+            if Validate_string == 1:
+                Tokens = Tokens + Iteration
             #Validating there´s no () in the line in order to split them into tokens
-            if (Iteration == " " or Iteration == "\t" or position==Delimiter) and (Iteration !="(" and Iteration !=")"):
+            if (Iteration == " " or Iteration == "\t" or position==Delimiter) and (Iteration !="(" and Iteration !=")") and Validate_string !=1:
                 if Iteration !=" " and Iteration !="\t" and Iteration !=";":
                     Tokens = Tokens + Iteration
                     #if there´s something stored in Tokens then concat the current value in in iteration
                 if len(Tokens) >= 1: 
+                    #TESTING THE STRINGS
                     
                     Matrix[Columns].append(Clasify_tokens(Tokens)) 
                     Row = Row +1 
-                    Tokens = ""
                 if Iteration == ";":
                     Matrix[Columns].append(Clasify_tokens(Iteration))
                     #Validating that there´s match with the current iteration with Operators in order to split the operators if they are joined with othe variable
@@ -298,7 +307,6 @@ def Compile():
                     if(Tokens!=""):
                         Matrix[Columns].append(Clasify_tokens(Tokens)) 
                         Row = Row +1 
-                        Tokens = ""
                     tempBack = Lines[position-1]
                     #Checking if the previous token stored in the Matrix is equal to =, <, > or ! to join the current token to the previous one
                     if tempBack == Iteration or tempBack in OperatorConcat:
@@ -308,9 +316,9 @@ def Compile():
                         
                     else:
                         Matrix[Columns].append(Clasify_tokens(Iteration)) 
-            else:
+            elif Validate_string !=1:
                 Tokens = Tokens + Iteration
-            
+
             position = position + 1
         Matrix.append([])
         RightTextbox.insert('end-1c',", ".join(Matrix[Columns]))

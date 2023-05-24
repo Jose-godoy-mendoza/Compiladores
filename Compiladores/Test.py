@@ -105,23 +105,37 @@ rows = 0
 Columns = 0
 Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","!", ";"])
 OperatorConcat=(["<",">","!"])
-Texto = "int Linea = hola;\n string text = hi; \n int Linea = 3; \n string bool = True;"
+#Texto = "int Linea = hola;\n string text = hi; \n int Linea = 3; \n string bool = True;"
+Texto = 'string ho = "Hola Mundo";'
 Text = Texto.splitlines()
 Matrix = [[]]
+validate_string = 0
 Comparison = [[]]
 for Lines in Text:
         position = 0
         Row = 0
         delimitador = len(Lines)-1
+        validate_string = 0
         while position <= delimitador:
             Iteration = Lines[position]
-            if (Iteration == " " or Iteration == "\t" or position==delimitador) and (Iteration !="(" and Iteration !=")"):
+            if Iteration == '"' and validate_string == 1:
+                    validate_string = 0
+            elif Iteration == '"':
+                print("PRUEBA")
+                validate_string = 1
+            
+            if validate_string == 1:
+                Tokens = Tokens + Iteration
+            if (Iteration == " " or Iteration == "\t" or position==delimitador) and (Iteration !="(" and Iteration !=")") and validate_string != 1:
                 if Iteration !=" " and Iteration !=";":
                     Tokens = Tokens + Iteration
                 if len(Tokens) >= 1: 
                     Matrix[Columns].append(Clasify_tokens(Tokens))
                     Row = Row +1
-                    Tokens = ""
+                    if validate_string == 1:
+                        breakpoint
+                    else:
+                        Tokens = ""
                 if Iteration == ";":
                     Matrix[Columns].append(Clasify_tokens(Iteration))
             elif Iteration in Operators:
@@ -129,7 +143,10 @@ for Lines in Text:
                     Matrix[Columns].append(Clasify_tokens(Tokens))
                     
                     Row = Row +1 
-                    Tokens = ""
+                    if validate_string == 1:
+                        breakpoint
+                    else:
+                        Tokens = ""
                 tempBack = Lines[position-1]
                     #tempFront = Lines[position+1]
                 if tempBack == Iteration or tempBack in OperatorConcat:
@@ -139,7 +156,7 @@ for Lines in Text:
                         
                 else:
                     Matrix[Columns].append(Clasify_tokens(Iteration))
-            else:
+            elif validate_string != 1:
                 Tokens = Tokens + Iteration
             position += 1
             #rows += rows
@@ -148,6 +165,7 @@ for Lines in Text:
         #Comparison.append([])
         #print(Matrix[Columns])
         Columns = Columns + 1
+print(Matrix)
 Tabla_Simbolos(Matrix)
 
 
