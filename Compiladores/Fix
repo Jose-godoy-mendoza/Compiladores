@@ -300,6 +300,10 @@ def Compile():
                     
                     Matrix[Columns].append(Clasify_tokens(Tokens)) 
                     Row = Row +1 
+                    if Validate_string == 1:
+                        breakpoint
+                    else:
+                        Tokens = ""
                 if Iteration == ";":
                     Matrix[Columns].append(Clasify_tokens(Iteration))
                     #Validating that there´s match with the current iteration with Operators in order to split the operators if they are joined with othe variable
@@ -307,6 +311,10 @@ def Compile():
                     if(Tokens!=""):
                         Matrix[Columns].append(Clasify_tokens(Tokens)) 
                         Row = Row +1 
+                        if Validate_string == 1:
+                            breakpoint
+                        else:
+                            Tokens = ""
                     tempBack = Lines[position-1]
                     #Checking if the previous token stored in the Matrix is equal to =, <, > or ! to join the current token to the previous one
                     if tempBack == Iteration or tempBack in OperatorConcat:

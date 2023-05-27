@@ -106,7 +106,7 @@ Columns = 0
 Operators = (["(",")","=","+", "-", "/", "*" ,"[", "]", "!=", "==", "<", ">", "<=", ">=", "&&", "||","!", ";"])
 OperatorConcat=(["<",">","!"])
 #Texto = "int Linea = hola;\n string text = hi; \n int Linea = 3; \n string bool = True;"
-Texto = 'string ho = "Hola Mundo";'
+Texto = 'string ho = "Hola Mundo;'
 Text = Texto.splitlines()
 Matrix = [[]]
 validate_string = 0

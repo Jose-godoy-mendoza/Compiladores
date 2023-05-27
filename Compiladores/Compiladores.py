@@ -76,6 +76,7 @@ def SaveFile():
 # ------------------- ERROR HANDLING ----------------- #
 def filter_tokens(variable):
     return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace("OP(","").replace(")","").replace(' ', '')
+    #return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace("OP(","").replace(")","")
 
 def ErrorMSG_NotDeclared(LineCount):
     Message = "ERROR SEMANTICO: VARIABLE AUN NO DECLARADA, ERROR EN LA LINEA: ", LineCount
@@ -165,8 +166,8 @@ def SymbolsTable(Matrix):
 
         
         if len(temp)==5:
-            if  "@" in temp[0] or "@" in temp[1] or "@" in temp[2] or "@" in temp[3] or "@" in temp[4] :
-                print("arroba encontrada")
+            if  "@" in temp[0] or "@" in temp[1] or "@" in temp[2] or ("@" in temp[3] and "ID" not in temp[3]) or "@" in temp[4] :
+                print("arroba encontrada en ", temp[3])
                 Message = "ERROR SINTACTICO: Simbolo invalido", Row_index+1
                 LowerTextbox.insert('end-1c', Message)
                 LowerTextbox.insert('end-1c', "\n")
@@ -278,11 +279,19 @@ def Compile():
     for Lines in Text:
         position = 0
         Row = 0
+        Validate_string = 0
         Delimiter = len(Lines)-1
         while position <= Delimiter:
             Iteration = Lines[position]
+            if Iteration == '"' and Validate_string == 1:
+                Validate_string = 0
+            elif Iteration == '"':
+                print("PRUEBA")
+                Validate_string = 1    
+            if Validate_string == 1:
+                Tokens = Tokens + Iteration
             #Validating there´s no () in the line in order to split them into tokens
-            if (Iteration == " " or Iteration == "\t" or position==Delimiter) and (Iteration !="(" and Iteration !=")"):
+            if (Iteration == " " or Iteration == "\t" or position==Delimiter) and (Iteration !="(" and Iteration !=")") and Validate_string !=1:
                 if Iteration !=" " and Iteration !="\t" and Iteration !=";":
                     Tokens = Tokens + Iteration
                     #if there´s something stored in Tokens then concat the current value in in iteration
@@ -290,7 +299,10 @@ def Compile():
                     
                     Matrix[Columns].append(Clasify_tokens(Tokens)) 
                     Row = Row +1 
-                    Tokens = ""
+                    if Validate_string == 1:
+                        breakpoint
+                    else:
+                        Tokens = ""
                 if Iteration == ";":
                     Matrix[Columns].append(Clasify_tokens(Iteration))
                     #Validating that there´s match with the current iteration with Operators in order to split the operators if they are joined with othe variable
@@ -298,7 +310,10 @@ def Compile():
                     if(Tokens!=""):
                         Matrix[Columns].append(Clasify_tokens(Tokens)) 
                         Row = Row +1 
-                        Tokens = ""
+                        if Validate_string == 1:
+                            breakpoint
+                        else:
+                            Tokens = ""
                     tempBack = Lines[position-1]
                     #Checking if the previous token stored in the Matrix is equal to =, <, > or ! to join the current token to the previous one
                     if tempBack == Iteration or tempBack in OperatorConcat:
@@ -308,7 +323,7 @@ def Compile():
                         
                     else:
                         Matrix[Columns].append(Clasify_tokens(Iteration)) 
-            else:
+            elif Validate_string !=1:
                 Tokens = Tokens + Iteration
             
             position = position + 1
