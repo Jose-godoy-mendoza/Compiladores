@@ -170,9 +170,9 @@ def SymbolsTable(Matrix):
                 Message = "ERROR SINTACTICO: Simbolo invalido", Row_index+1
                 LowerTextbox.insert('end-1c', Message)
                 LowerTextbox.insert('end-1c', "\n")
-            elif "ID" in temp[1] and "NUM" or "ID" or "double" or "float" or "boolean" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
+            elif "ID" in temp[1] and "NUM" or "ID" or "double" or "float" or "boolean" or "STR" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
                 #Validate that the type of the variable is the correct for its value
-                if ("int" in temp[0] and "NUM" in temp[3]) or ("double" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and "ID" in temp[3]):
+                if ("int" in temp[0] and "NUM" in temp[3]) or ("double" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and ("ID" in temp[3] or "STR" in temp[3])):
                     #print("CONFIRMANDO: ", temp[0]," .. ", temp[3]) 
                     Type = filter_tokens(temp[0])
                     ID = filter_tokens(temp[1])
@@ -252,6 +252,9 @@ def Clasify_tokens(Token):
         return Token
     elif Token in Operators:
         Token = "OP( "+Token+" )"
+        return Token
+    elif '"' in Token:
+        Token = "STR( "+Token+" )"
         return Token
     #with the following validation I can check if it has a . so I can store float or double variables
     elif Token.isnumeric() or (Token == '-' and Token[1:].isnumeric()) or (Token.count('.') == 1 and all(c.isdigit() for c in Token.replace('.', '', 1))):

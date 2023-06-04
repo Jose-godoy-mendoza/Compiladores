@@ -75,8 +75,8 @@ def SaveFile():
 
 # ------------------- ERROR HANDLING ----------------- #
 def filter_tokens(variable):
-    return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace("OP(","").replace(")","").replace(' ', '')
-    #return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace("OP(","").replace(")","")
+    #return variable.replace("PR(", "").replace("ID(","").replace("NUM(","").replace("OP(","").replace(")","").replace(' ', '')
+    return variable.replace("PR(", "").replace("ID(","").replace("STR(","").replace("NUM(","").replace("OP(","").replace(")","")
 
 def ErrorMSG_NotDeclared(LineCount):
     Message = "ERROR SEMANTICO: VARIABLE AUN NO DECLARADA, ERROR EN LA LINEA: ", LineCount
@@ -103,7 +103,8 @@ def ErrorHandling(Line, Match, LineCount):
             Line[2] = filter_tokens(Line[2])
             print(Line[2])
             if Line[2] in Match:
-                print("Asignacion correcta")
+                #print("Asignacion correcta")
+                breakpoint
             else:
                 ErrorMSG_NotDeclared(LineCount)
         else:
@@ -156,6 +157,8 @@ def SymbolsTable(Matrix):
     #Reading the Rows
     for Row_index, Row in enumerate(Matrix):
         linea = linea +1
+        CheckString = ""
+        output = 0
         #Reading the Columns
         
         for Columns_index, Columns in enumerate(Row):
@@ -163,22 +166,31 @@ def SymbolsTable(Matrix):
             #print(Matrix[Row_index][Columns_index])
         #print("********************************")
         #print(temp)
-
         
         if len(temp)==5:
-            if  "@" in temp[0] or "@" in temp[1] or "@" in temp[2] or ("@" in temp[3] and "ID" not in temp[3]) or "@" in temp[4] :
+            if "string" in temp[0]:    
+                CheckString = temp[3].replace('STR( "', '').replace(')','')
+                print("STR: ", CheckString)
+                
+            #if  "@" in temp[0] or "@" in temp[1] or "@" in temp[2] or ("@" in temp[3] and "ID" not in temp[3]) or "@" in temp[4]:
+            if  ("@" in temp[0] or "@" in temp[1] or "@" in temp[2] or ("@" in temp[3] and "ID" not in temp[3]) or "@" in temp[4]) and "STR" not in temp[3]:
                 print("arroba encontrada en ", temp[3])
                 Message = "ERROR SINTACTICO: Simbolo invalido", Row_index+1
                 LowerTextbox.insert('end-1c', Message)
                 LowerTextbox.insert('end-1c', "\n")
-            elif "ID" in temp[1] and "NUM" or "ID" or "double" or "float" or "boolean" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
+            elif "ID" in temp[1] and "NUM" or "ID" or "double" or "float" or "boolean" or "STR" in temp[3] and ";" in temp[4] or "PR" in temp[0]:
                 #Validate that the type of the variable is the correct for its value
-                if ("int" in temp[0] and "NUM" in temp[3]) or ("double" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and "ID" in temp[3]):
+                if ("int" in temp[0] and "NUM" in temp[3]) or ("double" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and '"'  in CheckString):
+                #if ("int" in temp[0] and "NUM" in temp[3]) or ("double" in temp[0] and "NUM" in temp[3]) or ("string" in temp[0] and ("ID" in temp[3] or "STR" in temp[3])):
                     #print("CONFIRMANDO: ", temp[0]," .. ", temp[3]) 
+                    #if '"' in CheckString:
+                        #print("STRING CORRECT")
+                        #output = 1
                     Type = filter_tokens(temp[0])
                     ID = filter_tokens(temp[1])
                     Value = filter_tokens(temp[3])
                 #Here I validate if the variable is not the type it was declared
+                # if '"' in CheckString
                 elif "PR( if )" in temp[0]:
 
                     ID = "ERROR"
@@ -203,12 +215,13 @@ def SymbolsTable(Matrix):
                     del Matrix[Row_index][Columns_index]
                     #score + 1
                 #If the value doesn´t match with the type here we show the error
-                elif len(ID) == 0 and len(Type) == 0 and len(Value)==0:
+                elif len(ID) == 0 and len(Type) == 0 and len(Value)==0 :
                     Message = "ERROR SINTACTICO: Mala asignacion al tipo de variable en la linea:", Row_index+1
                     LowerTextbox.insert('end-1c', Message)
                     LowerTextbox.insert('end-1c', "\n")
                     print("ERROR SINTACTICO: Mala declaracion de variable en la linea: ", Row_index+1)
                 #If the variable hasn´t been declared and its value matches its type we are going to show it
+                #if output != 1:
                 else: 
                     tree.insert("", "end", text=i, values=(Type, ID, Value, Row_index+1, Columns_index+1))
                     Match.append(ID)
@@ -254,6 +267,9 @@ def Clasify_tokens(Token):
     elif Token in Operators:
         Token = "OP( "+Token+" )"
         return Token
+    elif '"' in Token:
+        Token = "STR( "+Token+" )"
+        return Token
     #with the following validation I can check if it has a . so I can store float or double variables
     elif Token.isnumeric() or (Token == '-' and Token[1:].isnumeric()) or (Token.count('.') == 1 and all(c.isdigit() for c in Token.replace('.', '', 1))):
         Token = "NUM( "+Token+" )"
@@ -283,10 +299,16 @@ def Compile():
         Delimiter = len(Lines)-1
         while position <= Delimiter:
             Iteration = Lines[position]
-            if Iteration == '"' and Validate_string == 1:
+
+            if Validate_string != 2 and position == len(Lines)-1:
+                #print(Validate_string)
+                #print("error, no cerró comillas")
+                Validate_string = 0
+                
+            elif Iteration == '"' and Validate_string == 1:
                 Validate_string = 0
             elif Iteration == '"':
-                print("PRUEBA")
+                #print("PRUEBA")
                 Validate_string = 1    
             if Validate_string == 1:
                 Tokens = Tokens + Iteration
@@ -306,7 +328,7 @@ def Compile():
                 if Iteration == ";":
                     Matrix[Columns].append(Clasify_tokens(Iteration))
                     #Validating that there´s match with the current iteration with Operators in order to split the operators if they are joined with othe variable
-            elif Iteration in Operators:
+            elif Iteration in Operators and Validate_string !=1:
                     if(Tokens!=""):
                         Matrix[Columns].append(Clasify_tokens(Tokens)) 
                         Row = Row +1 
@@ -323,7 +345,8 @@ def Compile():
                         
                     else:
                         Matrix[Columns].append(Clasify_tokens(Iteration)) 
-            elif Validate_string !=1:
+            elif Validate_string <1:
+            #elif Validate_string !=1:
                 Tokens = Tokens + Iteration
             
             position = position + 1
